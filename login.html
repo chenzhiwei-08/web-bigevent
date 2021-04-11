@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="assets/lib/layui/css/layui.css">
+    <link rel="stylesheet" href="./assets/lib/layui/layui.js"> 
+    <link rel="stylesheet" href="/assets/css/login.css">
+    <title>Document</title>
+</head>
+<body>
+    <!--登录注册区-->
+    <div class="loginAndRegBox">
+        <div class="title-box"></div>
+        <!--登录的div-->
+        <div class="login-box">
+            <!--登录的表单-->
+            <form class="layui-form " action="" id="form_login">
+
+                <!--用户名-->
+                <div class="layui-form-item">
+                    <i class="layui-icon layui-icon-username"></i>
+                    <input type="text" name="username" value="chenzhiwei" required lay-verify="required|username"
+                        placeholder="请输入用户名" autocomplete="off" class="layui-input">
+                </div>
+                <!--密码-->
+                <div class="layui-form-item">
+                    <i class="layui-icon layui-icon-password"></i>
+                    <input type="password" name="password" value="123456" required lay-verify="required|pwd"
+                        placeholder="请输入密码" autocomplete="off" class="layui-input">
+                </div>
+                <!-- 提交-->
+                <div class="layui-form-item">
+                    <button class="layui-btn layui-btn-fluid layui-btn-normal" lay-submit lay-filter="formDemo">登录</button>
+                </div>
+                <!--注册的div-->
+                <div class="layui-form-item links">
+                    <a href="javascript:;" id="link_reg">去注册账号</a>
+                </div>
+            </form>
+        </div>
+        <div class="reg-box">
+            <!--注册的表单-->
+            <form class="layui-form" action="" id="form_reg">
+                <!--用户名-->
+                <div class="layui-form-item">
+                    <i class="layui-icon layui-icon-username"></i>
+                    <input type="text" name="username" required lay-verify="required|username" placeholder="请输入用户名"
+                        autocomplete="off" class="layui-input">
+                </div>
+                <!--密码-->
+                <div class="layui-form-item">
+                    <i class="layui-icon layui-icon-password"></i>
+                    <input type="text" name="password" required lay-verify="required|pwd" placeholder="请输入密码"
+                        autocomplete="off" class="layui-input">
+                </div>
+                <!--密码确认框-->
+                <div class="layui-form-item">
+                    <i class="layui-icon layui-icon-password"></i>
+                    <input type="password" name="repassword" required lay-verify="required|pwd|repwd" placeholder="再次确认密码"
+                        autocomplete="off" class="layui-input">
+                </div>
+                <!--注册 按钮-->
+                <div class="layui-form-item">
+                    <button  class="layui-btn layui-btn-fluid layui-btn-normal" lay-submit lay-filter='formDemo'>注册</button>
+                </div>
+                <!--注册的div-->
+                <div class="layui-form-item links">
+                    <a href="javascript:;" id="link_login">去登录</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+<script src="/assets/lib/layui/layui.all.js"></script>
+<script src="/assets/lib/jquery.js"></script>
+<script src="/assets/js/baseAPI.js"></script>
+<script>
+    $(function () {
+        //点击“去注册账号”的链接
+        $("#link_reg").on('click', function () {
+            $('.login-box').hide();
+            $('.reg-box').show();
+        })
+        //点击“去登录”的链接
+        $('#link_login').on('click', function () {
+            $('.login-box').show();
+            $('.reg-box').hide();
+        })
+        //自定义验证规则
+        var form = layui.form;//获取登录表单的class
+        var layer = layui.layer;
+        form.verify({
+            //自定义一个名为pwd校验规则
+            pwd: [/^[\S]{6,12}$/, '密码必须6-12位，且不能出现空格'],
+            //校验两次密码是否一样
+            repwd: function (value) {
+                //通过形参拿到确认密码框中的内容
+                //还需要拿到密码框中的内容
+                //然后进行一次等于的判断
+                //如果判断失败泽return一个提示消息
+                var pwd = $(".reg-box [name=password]").val()
+
+                if (value !== pwd) {
+                    return '两次密码输入不一致'
+                }
+            }
+        })
+        //监听注册表单的提交事件
+        //    let layer = layui.layer;
+    // console.log(layer);
+    // // 注册页面
+    $('#form_reg').on('submit', function (e) {
+        console.log(123123);
+        e.preventDefault();
+        $.ajax({
+            url: "/api/reguser",
+            type: "POST",
+            data: {
+                //用户名
+                username: $('.reg-box input[name="username"]').val(),
+                //密码
+                password: $('.reg-box input[name="password"]').val()
+            },
+            success: (res) => {
+                console.log(res);
+                if (res.status != 0) {
+                    layer.msg(res.message, { icon: 5 });
+                } else {
+                    layer.msg('恭喜您，注册成功。', { icon: 6 });
+                    // 注册完成之后点击去登录
+                    $('#link_login').click();
+                    // 清除注册
+
+                };
+
+            }
+        });
+    })
+        //监听登录表单的提交事件
+        $('#form_login').submit(function (e) {
+            //阻止默认的提交行为
+            e.preventDefault()
+            $.ajax({
+                method: 'POST',
+                url: '/api/login',
+                //快速获取表单数据
+                data: $(this).serialize(),
+                success: function (res) {
+                    console.log("请求成功", res);
+                    if (res.status !== 0) {
+                        return layer.msg("登录失败")
+                    }
+                    layer.msg("登录成功")
+                    //将登录成功得到的字符串的token字符串，保存到 localStorage中 
+                    localStorage.setItem('token', res.token)
+                    //跳转到后台主页
+                    location.href = '/index.html'
+                }
+            })
+        })
+    })
+</script>
+
+</html>
